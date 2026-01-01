@@ -1,5 +1,7 @@
 # 🚀 Job Hunter - AI-Powered Job Search Tool
 
+![Job Hunter Screenshot](assets/screenshot(1).png)
+
 An intelligent job search tool that helps you find remote opportunities that match your skills and automatically generates tailored application materials.
 
 ## 🌐 Live App
