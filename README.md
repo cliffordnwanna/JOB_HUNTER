@@ -2,7 +2,7 @@
 
 ![Job Hunter Screenshot](assets/Screenshot(1).png)
 
-An intelligent job search tool that helps you find remote opportunities that match your skills and automatically generates tailored application materials.
+An intelligent job search tool that helps you find remote opportunities that match your skills and automatically generates tailored application materials. Find your dream job in minutes, not weeks. Upload your CV, search by job title, and instantly get AI-matched opportunities with personalized cover letters ready to send.
 
 ## 🌐 Live App
 **👉 [Launch Job Hunter on Streamlit Cloud](https://remotejobhunter.streamlit.app)**
