@@ -1196,6 +1196,11 @@ def main():
         st.session_state.show_materials = False
     if 'selected_job_idx' not in st.session_state:
         st.session_state.selected_job_idx = 0
+    if 'show_breakdown' not in st.session_state:
+        st.session_state.show_breakdown = False
+    if 'breakdown_job_idx' not in st.session_state:
+        st.session_state.breakdown_job_idx = 0
+    
     # Filters in main area (permanently visible - no expander)
     st.subheader("⚙️ Search Filters")
     remote_type = st.selectbox(
@@ -1204,8 +1209,8 @@ def main():
         index=0,
         help="Choose 'Worldwide' if you can work from any country"
     )
-    min_match = st.slider("Minimum match score", 0, 100, 20, help="Lower = more results, Higher = better matches")
-    max_days = st.slider("Job posted within", 1, 45, 14, help="How recent should the job postings be?")
+    min_match = st.slider("How closely should jobs match your skills?", 0, 100, 20, help="Lower = more results, Higher = better matches")
+    max_days = st.slider("Job posted within (days)", 1, 45, 14, help="How recent should the job postings be?")
     
     exclude_keywords = st.text_input(
         "Exclude job titles containing:",
@@ -1395,8 +1400,8 @@ def main():
                     st.markdown(f"**{score_emoji} {title}**")
                     st.caption(f"🏢 {company} • 📍 {location} • {posted_display}")
                     
-                    # Action buttons row
-                    btn1, btn2, btn3 = st.columns([2, 2, 1])
+                    # Action buttons row - 3 equal columns
+                    btn1, btn2, btn3 = st.columns(3)
                     with btn1:
                         st.link_button("🔗 Apply Now", row['URL'], use_container_width=True, type="primary")
                     with btn2:
@@ -1420,7 +1425,11 @@ def main():
                             key=f"dl_{idx}"
                         )
                     with btn3:
-                        st.markdown(f"**{int(score)}%**")
+                        # Match score button that shows breakdown
+                        if st.button(f"📊 {int(score)}%", key=f"score_{idx}", use_container_width=True):
+                            st.session_state.show_breakdown = True
+                            st.session_state.breakdown_job_idx = idx
+                            st.rerun()
                     st.divider()
             
             # Load More button and Generate Materials button
@@ -1441,6 +1450,48 @@ def main():
                     st.session_state.show_materials = True
                     st.rerun()
 
+    # Match Breakdown Section
+    if st.session_state.get('show_breakdown') and st.session_state.jobs_df is not None and len(st.session_state.jobs_df) > 0:
+        st.divider()
+        breakdown_idx = st.session_state.get('breakdown_job_idx', 0)
+        if breakdown_idx < len(st.session_state.jobs_df):
+            job_row = st.session_state.jobs_df.iloc[breakdown_idx]
+            st.subheader(f"📊 Match Breakdown: {job_row['Title']} @ {job_row['Company']}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Overall Match Score", f"{int(job_row['Match Score'])}%")
+            with col2:
+                if st.button("❌ Close Breakdown", key="close_breakdown"):
+                    st.session_state.show_breakdown = False
+                    st.rerun()
+            
+            # Show breakdown details
+            st.write("**How we calculated your match:**")
+            
+            # Skills match
+            cv_skills = st.session_state.cv_data.get('skills', [])
+            job_desc = job_row.get('Description', '').lower()
+            matched_skills = [skill for skill in cv_skills if skill.lower() in job_desc]
+            
+            st.write(f"✅ **Skills Match:** {len(matched_skills)} of your {len(cv_skills)} skills found in job description")
+            if matched_skills:
+                st.write(f"   Matched skills: {', '.join(matched_skills[:5])}")
+            
+            # Job title relevance
+            job_title = job_row['Title'].lower()
+            st.write(f"📌 **Job Title:** {job_row['Title']}")
+            
+            # Location
+            location = job_row.get('Location', 'Remote')
+            st.write(f"📍 **Location:** {location}")
+            
+            # Recency
+            posted = job_row.get('Posted', 'N/A')
+            st.write(f"📅 **Posted:** {posted}")
+            
+            st.divider()
+    
     # Application Materials Generator Section
     if st.session_state.get('show_materials') and st.session_state.jobs_df is not None and len(st.session_state.jobs_df) > 0:
         st.divider()
