@@ -30,7 +30,7 @@ st.set_page_config(
     page_title="🚀 Job Hunter",
     page_icon="🎯",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"  # Collapsed by default for mobile
 )
 
 # ============================================================
@@ -74,7 +74,7 @@ if 'app_initialized' not in st.session_state:
     loading_placeholder.empty()
 
 # ============================================================
-# CUSTOM CSS - Clean & Simple
+# CUSTOM CSS - Mobile First Design
 # ============================================================
 st.markdown("""
 <style>
@@ -83,27 +83,54 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Reduce padding */
-    .block-container {padding-top: 1rem; padding-bottom: 1rem;}
+    /* Mobile-friendly padding */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
     
-    /* Simple header */
+    /* Prominent header */
     .main-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.2rem;
-        border-radius: 10px;
+        padding: 1.5rem;
+        border-radius: 12px;
         text-align: center;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .main-header h1 {color: white; margin: 0; font-size: 1.8em;}
-    .main-header p {color: #f0f0f0; margin: 5px 0 0 0; font-size: 0.95em;}
+    .main-header h1 {
+        color: white;
+        margin: 0;
+        font-size: 2em;
+        font-weight: 700;
+    }
+    .main-header p {
+        color: #f0f0f0;
+        margin: 8px 0 0 0;
+        font-size: 1em;
+    }
     
-    /* Clean job cards */
+    /* Prominent filter card */
+    .filter-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    }
+    
+    /* Job cards */
     .job-card {
-        background: #f8f9fa;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-left: 4px solid #667eea;
         padding: 1rem;
         border-radius: 8px;
-        margin-bottom: 0.8rem;
-        border-left: 3px solid #667eea;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .job-title {font-size: 1.1em; font-weight: 600; color: #333; margin-bottom: 0.3rem;}
     .job-meta {font-size: 0.85em; color: #666;}
@@ -111,6 +138,30 @@ st.markdown("""
     .score-high {color: #4CAF50;}
     .score-medium {color: #FF9800;}
     .score-low {color: #999;}
+    
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+        .stButton button {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .main-header h1 {
+            font-size: 1.5em;
+        }
+        .main-header p {
+            font-size: 0.9em;
+        }
+        .block-container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+    
+    /* Success/info boxes */
+    .stSuccess, .stInfo, .stWarning {
+        border-radius: 8px;
+        padding: 1rem;
+    }
     
     /* Compact sidebar */
     section[data-testid="stSidebar"] {width: 280px !important;}
@@ -504,10 +555,20 @@ class JobScraper:
                 })
             return jobs
         except ImportError:
-            st.info("JobSpy not available, using backup sources...")
+            # JobSpy library not installed - silent fallback
+            print("JobSpy not installed, using backup sources")
             return []
         except Exception as e:
-            st.warning(f"JobSpy error: {e}")
+            error_msg = str(e)
+            # Handle common network errors gracefully
+            if "NameResolutionError" in error_msg or "getaddrinfo failed" in error_msg:
+                print(f"JobSpy: Network/DNS error - using backup sources")
+            elif "Max retries exceeded" in error_msg:
+                print(f"JobSpy: Rate limited or blocked - using backup sources")
+            elif "timeout" in error_msg.lower():
+                print(f"JobSpy: Timeout - using backup sources")
+            else:
+                print(f"JobSpy error: {error_msg[:100]}")
             return []
 
     def scrape_all(self, keywords: List[str] = None, progress_callback=None):
@@ -566,10 +627,39 @@ class JobScraper:
 
         # Log source counts to terminal
         print(f"\n📊 Job Source Results: {source_counts}")
-        print(f"📊 Total before dedup: {len(all_jobs)}")
+        print(f"📊 Total before filtering: {len(all_jobs)}")
 
         if progress_callback:
-            progress_callback(0.75, f"📊 Found {len(all_jobs)} jobs, removing duplicates...")
+            progress_callback(0.75, f"📊 Found {len(all_jobs)} jobs, filtering by relevance...")
+
+        # Filter jobs by keyword relevance (title or description must contain at least one keyword)
+        if keywords:
+            keyword_filtered = []
+            keywords_lower = [k.lower() for k in keywords]
+            # Also include related terms for common searches
+            expanded_keywords = set(keywords_lower)
+            for kw in keywords_lower:
+                if 'social media' in kw:
+                    expanded_keywords.update(['social', 'media', 'content', 'marketing', 'community', 'digital'])
+                if 'data' in kw:
+                    expanded_keywords.update(['data', 'analyst', 'analytics', 'scientist', 'engineer'])
+                if 'developer' in kw or 'engineer' in kw:
+                    expanded_keywords.update(['developer', 'engineer', 'software', 'frontend', 'backend', 'fullstack'])
+            
+            for job in all_jobs:
+                title_lower = job.get('title', '').lower()
+                desc_lower = job.get('description', '').lower()[:500]  # First 500 chars
+                combined = title_lower + ' ' + desc_lower
+                
+                # Check if any keyword matches
+                if any(kw in combined for kw in expanded_keywords):
+                    keyword_filtered.append(job)
+            
+            print(f"📊 After keyword filter: {len(keyword_filtered)} jobs")
+            all_jobs = keyword_filtered
+
+        if progress_callback:
+            progress_callback(0.80, f"📊 Removing duplicates from {len(all_jobs)} jobs...")
 
         # Remove duplicates by URL and title+company combo
         seen_urls = set()
@@ -584,6 +674,7 @@ class JobScraper:
                 seen_jobs.add(job_key)
                 unique_jobs.append(job)
 
+        print(f"📊 Final unique jobs: {len(unique_jobs)}")
         self.jobs = unique_jobs
         return unique_jobs
 
@@ -775,9 +866,11 @@ class JobFilter:
                 title_match = title_lower.str.contains(search_pattern, na=False, regex=True)
                 desc_match = desc_lower.str.contains(search_pattern, na=False, regex=True)
                 jobs_df['keyword_match'] = title_match | desc_match
-                # Boost score for keyword matches (+25 for title, +15 for description only)
-                jobs_df.loc[title_match, 'Match Score'] = jobs_df.loc[title_match, 'Match Score'] + 25
-                jobs_df.loc[desc_match & ~title_match, 'Match Score'] = jobs_df.loc[desc_match & ~title_match, 'Match Score'] + 15
+                # Boost score for keyword matches (+15 for title, +10 for description only)
+                jobs_df.loc[title_match, 'Match Score'] = jobs_df.loc[title_match, 'Match Score'] + 15
+                jobs_df.loc[desc_match & ~title_match, 'Match Score'] = jobs_df.loc[desc_match & ~title_match, 'Match Score'] + 10
+                # Cap scores at 100%
+                jobs_df['Match Score'] = jobs_df['Match Score'].clip(upper=100)
                 # Don't filter - just boost. All jobs stay in results.
 
         # Exclude keywords filter - use word boundaries for accurate matching
@@ -798,12 +891,17 @@ class JobFilter:
         if len(filtered) < 20:
             filtered = jobs_df[jobs_df['days_ago'] <= 45].copy()
 
-        # Score filter with fallback
+        # Score filter with progressive fallback to ensure results
         score_filtered = filtered[filtered['Match Score'] >= min_score].copy()
-        if len(score_filtered) == 0:
-            score_filtered = filtered[filtered['Match Score'] >= 30].copy()
-        if len(score_filtered) == 0:
-            score_filtered = filtered.nlargest(10, 'Match Score').copy()
+        if len(score_filtered) < 5:
+            # Try lower threshold
+            score_filtered = filtered[filtered['Match Score'] >= max(min_score - 20, 20)].copy()
+        if len(score_filtered) < 5:
+            # Try even lower
+            score_filtered = filtered[filtered['Match Score'] >= 10].copy()
+        if len(score_filtered) < 5:
+            # Just take top jobs by score
+            score_filtered = filtered.nlargest(min(20, len(filtered)), 'Match Score').copy()
         filtered = score_filtered
 
         # Location filter based on remote_type preference
@@ -827,12 +925,12 @@ class JobFilter:
             # "Remote" without country restriction is good
             is_just_remote = location_text.str.strip() == 'remote'
             
-            # Boost truly worldwide/remote jobs
-            filtered.loc[is_worldwide | is_just_remote, 'Match Score'] = filtered.loc[is_worldwide | is_just_remote, 'Match Score'] + 20
+            # Boost truly worldwide/remote jobs significantly
+            filtered.loc[is_worldwide | is_just_remote, 'Match Score'] = filtered.loc[is_worldwide | is_just_remote, 'Match Score'] + 30
             
-            # Penalize US-specific jobs (cities or country)
+            # Penalize US-specific jobs heavily (cities or country) - they should appear lower
             is_us_specific = (is_us_city | is_us_country) & ~is_worldwide
-            filtered.loc[is_us_specific, 'Match Score'] = filtered.loc[is_us_specific, 'Match Score'] - 25
+            filtered.loc[is_us_specific, 'Match Score'] = filtered.loc[is_us_specific, 'Match Score'] - 40
                 
         elif remote_type in ["USA Remote Only", "USA Only"]:
             # Keep only USA remote jobs
@@ -843,6 +941,9 @@ class JobFilter:
             if len(usa_jobs) >= 5:
                 filtered = usa_jobs
 
+        # Cap all scores at 100% to ensure no percentage exceeds 100
+        filtered['Match Score'] = filtered['Match Score'].clip(upper=100)
+        
         # Sort by score
         filtered = filtered.sort_values('Match Score', ascending=False).reset_index(drop=True)
 
@@ -1073,9 +1174,12 @@ def main():
     st.markdown("""
     <div class="main-header">
         <h1>🚀 Job Hunter</h1>
-        <p>Search job boards instantly • AI-powered matching • Find your dream remote job</p>
+        <p>Find remote jobs that match your skills • Generate cover letters instantly</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Quick guide for new users
+    st.info("💡 **How it works:** Upload your CV → Enter job titles → Get matched jobs → Apply with one click!")
 
     # Initialize session state
     if 'cv_data' not in st.session_state:
@@ -1094,22 +1198,24 @@ def main():
         st.session_state.selected_job_idx = 0
 
     # Filters in main area (mobile-friendly) - using expander
-    with st.expander("⚙️ Search Filters", expanded=False):
+    with st.expander("⚙️ Search Filters", expanded=True):
         filter_col1, filter_col2, filter_col3 = st.columns(3)
         with filter_col1:
             remote_type = st.selectbox(
-                "🌍 Location",
+                "🌍 Where can you work from?",
                 ["Worldwide (Anywhere)", "All Remote", "USA Only"],
-                index=0
+                index=0,
+                help="Choose 'Worldwide' if you can work from any country"
             )
         with filter_col2:
-            min_match = st.slider("Min match %", 0, 100, 40)
+            min_match = st.slider("Minimum match score", 0, 100, 20, help="Lower = more results, Higher = better matches")
         with filter_col3:
-            max_days = st.slider("Posted within (days)", 1, 45, 14)
+            max_days = st.slider("Job posted within", 1, 45, 14, help="How recent should the job postings be?")
         
         exclude_keywords = st.text_input(
-            "Exclude keywords:",
-            placeholder="senior, lead, director"
+            "Exclude job titles containing:",
+            placeholder="senior, lead, director",
+            help="Jobs with these words in the title will be hidden"
         )
 
     # Main content
@@ -1139,12 +1245,13 @@ def main():
         st.header("🔍 Step 2: Search Jobs")
         
         job_titles = st.text_area(
-            "Enter job titles (comma-separated)",
-            placeholder="e.g., social media manager, content creator, marketing coordinator",
-            help="Enter the job titles you're looking for, separated by commas"
+            "What job are you looking for?",
+            placeholder="e.g., social media manager, content creator, data analyst",
+            help="Enter one or more job titles. Separate multiple titles with commas.",
+            height=80
         )
 
-        search_button = st.button("🚀 Find Jobs", type="primary", use_container_width=True)
+        search_button = st.button("🚀 Find My Jobs", type="primary", use_container_width=True)
 
         if search_button:
             if st.session_state.cv_data is None:
@@ -1156,13 +1263,16 @@ def main():
                 
                 progress_bar = st.progress(0)
                 status_text = st.empty()
+                percent_text = st.empty()
 
                 def update_progress(value, text):
                     progress_bar.progress(value)
+                    percent = int(value * 100)
                     status_text.text(text)
+                    percent_text.markdown(f"**{percent}%** complete")
 
                 # Scrape jobs
-                update_progress(0.1, "🔍 Searching job platforms...")
+                update_progress(0.05, "🔍 Starting job search...")
                 scraper = JobScraper()
                 jobs = scraper.scrape_all(keywords=titles_list, progress_callback=update_progress)
 
@@ -1212,11 +1322,11 @@ def main():
                     st.session_state.search_count += 1
                     st.session_state.jobs_shown = 15  # Reset pagination on new search
 
-                    progress_bar.progress(1.0)
-                    status_text.text("✅ Search complete!")
+                    update_progress(1.0, "✅ Search complete!")
                     time.sleep(0.5)
                     progress_bar.empty()
                     status_text.empty()
+                    percent_text.empty()
                     
                     # Auto-scroll to results
                     st.balloons()
@@ -1287,24 +1397,52 @@ def main():
                 location = 'Remote' if loc.lower() in ['nan', 'none', ''] else loc[:30]
                 
                 with st.container():
-                    col_info, col_action = st.columns([4, 1])
-                    with col_info:
-                        st.markdown(f"**{score_emoji} {title}**")
-                        st.caption(f"🏢 {company} • 📍 {location} • {posted_display}")
-                    with col_action:
-                        st.link_button(f"{int(score)}%", row['URL'], use_container_width=True)
+                    st.markdown(f"**{score_emoji} {title}**")
+                    st.caption(f"🏢 {company} • 📍 {location} • {posted_display}")
+                    
+                    # Action buttons row
+                    btn1, btn2, btn3 = st.columns([2, 2, 1])
+                    with btn1:
+                        st.link_button("🔗 Apply Now", row['URL'], use_container_width=True, type="primary")
+                    with btn2:
+                        # Generate and download cover letter directly
+                        helper = ApplicationHelper()
+                        job_dict = {
+                            'Title': row['Title'],
+                            'Company': row['Company'],
+                            'URL': row['URL'],
+                            'Location': row.get('Location', 'Remote'),
+                            'Description': row.get('Description', '')
+                        }
+                        cover_letter = helper.generate_cover_letter(st.session_state.cv_data, job_dict, job_dict.get('Description', ''))
+                        docx_bytes = helper.export_cover_letter_docx(cover_letter, job_dict['Title'], job_dict['Company'])
+                        st.download_button(
+                            "📝 Cover Letter",
+                            docx_bytes,
+                            f"cover_letter_{job_dict['Company'].replace(' ', '_')}.docx",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True,
+                            key=f"dl_{idx}"
+                        )
+                    with btn3:
+                        st.markdown(f"**{int(score)}%**")
                     st.divider()
             
             # Load More button and Generate Materials button
-            btn_col1, btn_col2 = st.columns(2)
-            with btn_col1:
-                if jobs_to_show < len(jobs_df):
-                    remaining = len(jobs_df) - jobs_to_show
+            if jobs_to_show < len(jobs_df):
+                remaining = len(jobs_df) - jobs_to_show
+                col1, col2 = st.columns(2)
+                with col1:
                     if st.button(f"📄 Load More ({remaining})", use_container_width=True):
                         st.session_state.jobs_shown += 15
                         st.rerun()
-            with btn_col2:
-                if st.button("📝 Generate Cover Letter", use_container_width=True, type="secondary"):
+                with col2:
+                    if st.button("📋 Generate Application Materials", use_container_width=True, type="secondary"):
+                        st.session_state.show_materials = True
+                        st.rerun()
+            else:
+                # Full width button when no more jobs to load
+                if st.button("📋 Generate Application Materials", use_container_width=True, type="secondary"):
                     st.session_state.show_materials = True
                     st.rerun()
 
@@ -1314,17 +1452,26 @@ def main():
         st.subheader("📝 Application Materials Generator")
         
         jobs_df = st.session_state.jobs_df
-        job_options = [f"{i+1}. {row['Title'][:40]} @ {row['Company'][:20]}" for i, row in jobs_df.head(20).iterrows()]
         
         col_select, col_close = st.columns([4, 1])
+        
+        # Use pre-selected job index if available
+        selected_idx = st.session_state.get('selected_job_idx', 0)
+        if selected_idx >= len(jobs_df):
+            selected_idx = 0
+        
+        # Create job options with proper indexing
+        job_options = [f"{i+1}. {row['Title'][:40]} @ {row['Company'][:20]}" for i, (idx, row) in enumerate(jobs_df.iterrows())]
+        
         with col_select:
-            selected_job = st.selectbox("Select a job to generate materials for:", job_options, key="job_selector")
+            selected_job = st.selectbox("Select a job to generate materials for:", job_options, index=selected_idx, key="job_selector")
         with col_close:
             if st.button("❌ Close", key="close_materials"):
                 st.session_state.show_materials = False
                 st.rerun()
         
-        job_idx = job_options.index(selected_job) if selected_job in job_options else 0
+        # Get the actual job index from the selected option
+        job_idx = job_options.index(selected_job) if selected_job in job_options else selected_idx
         job_row = jobs_df.iloc[job_idx]
         job_dict = {
             'Title': job_row['Title'],
