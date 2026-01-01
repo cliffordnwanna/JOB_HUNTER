@@ -1093,43 +1093,24 @@ def main():
     if 'selected_job_idx' not in st.session_state:
         st.session_state.selected_job_idx = 0
 
-    # Sidebar - Simplified
-    with st.sidebar:
-        st.markdown("### ⚙️ Settings")
-        
-        remote_type = st.selectbox(
-            "🌍 Location",
-            ["Worldwide (Anywhere)", "All Remote", "USA Only"],
-            index=0
-        )
-        
-        with st.expander("More Filters", expanded=False):
-            min_match = st.slider("Min match %", 0, 100, 40)
-            max_days = st.slider("Posted within (days)", 1, 45, 14)
-            exclude_keywords = st.text_input(
-                "Exclude keywords:",
-                placeholder="senior, lead, director"
+    # Filters in main area (mobile-friendly) - using expander
+    with st.expander("⚙️ Search Filters", expanded=False):
+        filter_col1, filter_col2, filter_col3 = st.columns(3)
+        with filter_col1:
+            remote_type = st.selectbox(
+                "🌍 Location",
+                ["Worldwide (Anywhere)", "All Remote", "USA Only"],
+                index=0
             )
+        with filter_col2:
+            min_match = st.slider("Min match %", 0, 100, 40)
+        with filter_col3:
+            max_days = st.slider("Posted within (days)", 1, 45, 14)
         
-        st.divider()
-        
-        # Application Materials Generator in sidebar
-        if st.session_state.jobs_df is not None and len(st.session_state.jobs_df) > 0:
-            st.markdown("### 📝 Application Materials")
-            if st.button("✨ Generate Cover Letter & Email", use_container_width=True):
-                st.session_state.show_materials = True
-        
-        # Saved jobs section
-        if st.session_state.saved_jobs:
-            st.divider()
-            st.markdown(f"**💾 Saved ({len(st.session_state.saved_jobs)})**")
-            for saved in st.session_state.saved_jobs[:3]:
-                st.markdown(f"• [{saved['title'][:20]}...]({saved['url']})")
-            if len(st.session_state.saved_jobs) > 5:
-                st.caption(f"...and {len(st.session_state.saved_jobs) - 5} more")
-        
-        st.divider()
-        st.caption("💡 **Tip:** Run this daily for fresh opportunities!")
+        exclude_keywords = st.text_input(
+            "Exclude keywords:",
+            placeholder="senior, lead, director"
+        )
 
     # Main content
     col1, col2 = st.columns([1, 1])
@@ -1314,11 +1295,17 @@ def main():
                         st.link_button(f"{int(score)}%", row['URL'], use_container_width=True)
                     st.divider()
             
-            # Load More button
-            if jobs_to_show < len(jobs_df):
-                remaining = len(jobs_df) - jobs_to_show
-                if st.button(f"📄 Load More ({remaining} remaining)", use_container_width=True):
-                    st.session_state.jobs_shown += 15
+            # Load More button and Generate Materials button
+            btn_col1, btn_col2 = st.columns(2)
+            with btn_col1:
+                if jobs_to_show < len(jobs_df):
+                    remaining = len(jobs_df) - jobs_to_show
+                    if st.button(f"📄 Load More ({remaining})", use_container_width=True):
+                        st.session_state.jobs_shown += 15
+                        st.rerun()
+            with btn_col2:
+                if st.button("📝 Generate Cover Letter", use_container_width=True, type="secondary"):
+                    st.session_state.show_materials = True
                     st.rerun()
 
     # Application Materials Generator Section
