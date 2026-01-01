@@ -1199,18 +1199,14 @@ def main():
 
     # Filters in main area (mobile-friendly) - using expander
     with st.expander("⚙️ Search Filters", expanded=True):
-        filter_col1, filter_col2, filter_col3 = st.columns(3)
-        with filter_col1:
-            remote_type = st.selectbox(
-                "🌍 Where can you work from?",
-                ["Worldwide (Anywhere)", "All Remote", "USA Only"],
-                index=0,
-                help="Choose 'Worldwide' if you can work from any country"
-            )
-        with filter_col2:
-            min_match = st.slider("Minimum match score", 0, 100, 20, help="Lower = more results, Higher = better matches")
-        with filter_col3:
-            max_days = st.slider("Job posted within", 1, 45, 14, help="How recent should the job postings be?")
+        remote_type = st.selectbox(
+            "🌍 Where can you work from?",
+            ["Worldwide (Anywhere)", "All Remote", "USA Only"],
+            index=0,
+            help="Choose 'Worldwide' if you can work from any country"
+        )
+        min_match = st.slider("Minimum match score", 0, 100, 20, help="Lower = more results, Higher = better matches")
+        max_days = st.slider("Job posted within", 1, 45, 14, help="How recent should the job postings be?")
         
         exclude_keywords = st.text_input(
             "Exclude job titles containing:",
