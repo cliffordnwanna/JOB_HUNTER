@@ -4,7 +4,7 @@ An intelligent job search tool that helps you find remote opportunities that mat
 
 ## 🌐 Live App
 
-**👉 [Launch Job Hunter on Streamlit Cloud]([https://YOUR-APP-NAME.streamlit.app](https://remotejobhunter.streamlit.app/))**
+**👉 [Launch Job Hunter on Streamlit Cloud]([https://remotejobhunter.streamlit.app])**
 
 ## 🎯 Features
 
