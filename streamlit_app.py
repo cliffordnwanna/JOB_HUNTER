@@ -1196,25 +1196,22 @@ def main():
         st.session_state.show_materials = False
     if 'selected_job_idx' not in st.session_state:
         st.session_state.selected_job_idx = 0
-    if 'filters_expanded' not in st.session_state:
-        st.session_state.filters_expanded = True
-
-    # Filters in main area (mobile-friendly) - using expander
-    with st.expander("⚙️ Search Filters", expanded=st.session_state.filters_expanded):
-        remote_type = st.selectbox(
-            "🌍 Where can you work from?",
-            ["Worldwide (Anywhere)", "All Remote", "USA Only"],
-            index=0,
-            help="Choose 'Worldwide' if you can work from any country"
-        )
-        min_match = st.slider("Minimum match score", 0, 100, 20, help="Lower = more results, Higher = better matches")
-        max_days = st.slider("Job posted within", 1, 45, 14, help="How recent should the job postings be?")
-        
-        exclude_keywords = st.text_input(
-            "Exclude job titles containing:",
-            placeholder="senior, lead, director",
-            help="Jobs with these words in the title will be hidden"
-        )
+    # Filters in main area (permanently visible - no expander)
+    st.subheader("⚙️ Search Filters")
+    remote_type = st.selectbox(
+        "🌍 Where can you work from?",
+        ["Worldwide (Anywhere)", "All Remote", "USA Only"],
+        index=0,
+        help="Choose 'Worldwide' if you can work from any country"
+    )
+    min_match = st.slider("Minimum match score", 0, 100, 20, help="Lower = more results, Higher = better matches")
+    max_days = st.slider("Job posted within", 1, 45, 14, help="How recent should the job postings be?")
+    
+    exclude_keywords = st.text_input(
+        "Exclude job titles containing:",
+        placeholder="senior, lead, director",
+        help="Jobs with these words in the title will be hidden"
+    )
 
     # Main content
     col1, col2 = st.columns([1, 1])
