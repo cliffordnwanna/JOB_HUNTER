@@ -3,16 +3,18 @@
 An intelligent job search tool that helps you find remote opportunities that match your skills and automatically generates tailored application materials.
 
 ## 🌐 Live App
-
-**👉 [Launch Job Hunter on Streamlit Cloud](https://YOUR-APP-NAME.streamlit.app)**
+**👉 [Launch Job Hunter on Streamlit Cloud](https://remotejobhunter.streamlit.app)**
 
 ## 🎯 Features
 
+- **Smart Job Matching** - TF-IDF + skill matching + keyword relevance filtering
+- **Match Score Breakdown** - 0-100% score with detailed metrics (skills matched, job title, location, recency)
+- **Instant Cover Letter Download** - Generate and download DOCX cover letters per job"
+- **Application Materials Generator** - Create tailored cover letters, resume bullets, and email templates"
+- **Mobile-First Design** - Fully responsive UI optimized for mobile devices"
+- **Progress Tracking** - Real-time percentage indicator during job search"
 - **Multi-Format CV Parsing** - Supports PDF, DOCX, and TXT
-- **Multi-Source Job Scraping** - LinkedIn, Indeed, Glassdoor, RemoteOK, WeWorkRemotely
-- **AI-Powered Matching** - BERT semantic similarity using transformer models
-- **Smart Scoring** - 0-100% match score with detailed explanations
-- **Application Helper** - Auto-generates cover letters and emails
+- **Multi-Source Job Search** - LinkedIn, Indeed, Glassdoor, RemoteOK, WeWorkRemotely
 - **Export to CSV** - Download all results for tracking
 - **100% Free** - No API keys required
 
@@ -139,28 +141,6 @@ Your app will be live at `https://YOUR-APP-NAME.streamlit.app`
     ...
 ```
 
-## 🔧 Customization
-
-### Add Custom Job Sources
-
-Edit the `JobScraper` class to add your preferred job boards:
-
-```python
-def scrape_custom_site(self, url: str) -> List[Dict]:
-    # Your scraping logic here
-    pass
-```
-
-### Adjust Matching Algorithm
-
-Modify the `JobMatcher.calculate_match_score()` method:
-
-```python
-# Change weights
-base_score = similarity * 80  # Increase semantic weight
-skill_bonus = min(skill_matches * 3, 15)  # Adjust skill bonus
-```
-
 ## 📈 Success Metrics
 
 Users report:
@@ -213,8 +193,8 @@ MIT License - feel free to use for personal or commercial purposes.
 
 ## 📞 Support
 
-- 🐛 Issues: [GitHub Issues](https://github.com/YOUR_USERNAME/remote-job-finder/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/YOUR_USERNAME/remote-job-finder/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/cliffordnwanna/remote-job-finder/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/cliffordnwanna/remote-job-finder/discussions)
 
 ## ⭐ Star This Repo
 
