@@ -1174,7 +1174,7 @@ def main():
     st.markdown("""
     <div class="main-header">
         <h1>🚀 Job Hunter</h1>
-        <p>Find remote jobs that match your skills • Generate cover letters instantly</p>
+        <p>Find jobs that match your skills • Generate cover letters instantly</p>
     </div>
     """, unsafe_allow_html=True)
     
