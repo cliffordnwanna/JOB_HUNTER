@@ -1196,9 +1196,11 @@ def main():
         st.session_state.show_materials = False
     if 'selected_job_idx' not in st.session_state:
         st.session_state.selected_job_idx = 0
+    if 'filters_expanded' not in st.session_state:
+        st.session_state.filters_expanded = True
 
     # Filters in main area (mobile-friendly) - using expander
-    with st.expander("⚙️ Search Filters", expanded=True):
+    with st.expander("⚙️ Search Filters", expanded=st.session_state.filters_expanded):
         remote_type = st.selectbox(
             "🌍 Where can you work from?",
             ["Worldwide (Anywhere)", "All Remote", "USA Only"],
