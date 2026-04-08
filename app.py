@@ -134,6 +134,23 @@ def main():
             
             st.write(f"### Found {len(scored_jobs)} matches for you:")
             
+            # Download as CSV Utility
+            df = pd.DataFrame(scored_jobs)
+            if not df.empty:
+                # Clean up description for CSV readability
+                if 'description' in df.columns:
+                    df['description'] = df['description'].str.slice(0, 200) + "..."
+                
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download Matches as CSV",
+                    data=csv,
+                    file_name=f"job_matches_{time.strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    help="Export your matches for application tracking"
+                )
+            
             for job in scored_jobs[:20]:  # Show top 20
                 display_job_card(job)
 
