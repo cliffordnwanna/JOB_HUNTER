@@ -77,10 +77,20 @@ def main():
 
     with col2:
         st.subheader("🎯 Job Matching")
-        search_keywords = st.text_input("Enter search keywords (e.g. 'Azure AI', 'Python Developer')", 
-                                      placeholder="Leave empty to use CV skills")
         
-        if st.button("Find Matching Jobs", type="primary"):
+        # New Filter Section
+        with st.expander("🔍 Search Filters & Options", expanded=False):
+            f_col1, f_col2 = st.columns(2)
+            with f_col1:
+                search_keywords = st.text_input("Job Title / Skills", 
+                                              placeholder="e.g. 'Azure AI', 'Python Developer'",
+                                              help="Leave empty to use skills extracted from your CV")
+                limit = st.slider("Max results per source", 10, 100, 50)
+            with f_col2:
+                location_filter = st.selectbox("Preferred Location", ["All Remote", "USA", "Europe", "UK", "Worldwide"])
+                min_score = st.slider("Minimum Match Score %", 0, 100, 30)
+
+        if st.button("Find Matching Jobs", type="primary", use_container_width=True):
             if not uploaded_file:
                 st.error("Please upload your CV first!")
                 return
@@ -99,6 +109,7 @@ def main():
 
             jobs = scraper.scrape_all(
                 keywords=[search_keywords] if search_keywords else cv_data.get('skills', []),
+                limit=limit,
                 progress_callback=update_progress
             )
             
@@ -109,6 +120,12 @@ def main():
             # 2. Match & Score
             scored_jobs = matcher.score_jobs(jobs, progress_callback=update_progress)
             
+            # Apply Filters
+            if location_filter != "All Remote":
+                scored_jobs = [j for j in scored_jobs if location_filter.lower() in j.get('location', '').lower()]
+            
+            scored_jobs = [j for j in scored_jobs if j.get('Match Score', 0) >= min_score]
+
             # Final Results
             update_progress(1.0, "✅ Done! Top matches found.")
             time.sleep(0.5)
@@ -124,8 +141,7 @@ def main():
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: #666; font-size: 0.8em;">
-        Built by <b>Chukwuma Nwanna</b> | Transitioning to AI Engineer | 
-        Powered by Azure OpenAI (Optional) & TF-IDF
+        Built by <b>Chukwuma Clifford Nwanna</b>
     </div>
     """, unsafe_allow_html=True)
 

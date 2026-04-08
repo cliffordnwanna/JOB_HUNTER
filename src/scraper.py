@@ -153,8 +153,8 @@ class JobScraper:
         except Exception:
             return []
 
-    def scrape_all(self, keywords: List[str] = None, progress_callback=None):
-        """Scrape jobs from 9 different sources for maximum coverage."""
+    def scrape_all(self, keywords: List[str] = None, limit: int = 50, progress_callback=None):
+        """Scrape jobs from sources with specific limit."""
         all_jobs = []
         
         scrapers = [
@@ -170,7 +170,7 @@ class JobScraper:
         for i, (scraper_func, name) in enumerate(scrapers):
             if progress_callback:
                 progress_callback((i + 1) / total_scrapers, f"🔍 Searching {name}...")
-            all_jobs.extend(scraper_func())
+            all_jobs.extend(scraper_func(limit=limit))
 
         # Filter by keyword
         if keywords:
