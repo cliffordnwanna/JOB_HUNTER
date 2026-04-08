@@ -1,3 +1,14 @@
+---
+title: Job Hunter Pro
+emoji: 🎯
+colorFrom: blue
+colorTo: indigo
+sdk: streamlit
+sdk_version: "1.28.0"
+app_file: app.py
+pinned: false
+---
+
 # 🚀 Job Hunter Pro: Enterprise AI Job Matching Platform
 
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/cliffordnwanna/job-hunter-pro)
@@ -7,7 +18,23 @@
 
 ---
 
-## 🌟 Key Technical Highlights
+## � Live Project
+**🚀 [Try Job Hunter Pro on Hugging Face Spaces](https://huggingface.co/spaces/cliffordnwanna/job-hunter)**
+
+---
+
+## ⚖️ AI Governance & Data Privacy (GDPR)
+
+As an AI Engineer, I prioritize **Responsible AI** and data sovereignty. This platform is built with the following governance principles:
+
+- **GDPR Compliance**: No Personally Identifiable Information (PII) is transmitted to third-party AI models (Azure OpenAI).
+- **In-Memory Processing**: All CV parsing and job matching occur in-memory. **No data is stored** on disk or in persistent databases.
+- **Data Minimization**: Only anonymized skill tokens and job requirements are used for matching.
+- **Stateless Architecture**: Each user session is isolated and stateless; once the browser is closed, all session data is purged.
+
+---
+
+## �🌟 Key Technical Highlights
 
 - **Hybrid Matching Engine**: Implements a dual-layer scoring system:
   - **Standard**: High-speed TF-IDF and keyword adjacency matching.

@@ -33,6 +33,16 @@ def main():
     if use_azure:
         st.sidebar.warning("Note: Azure OpenAI deployment 'text-embedding-3-small' is required.")
 
+    # Governance Section (Sidebar)
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("⚖️ AI Governance")
+    st.sidebar.info("""
+    **Privacy & Compliance:**
+    - **GDPR Compliant**: No PII is sent to Azure OpenAI.
+    - **In-Memory**: No CV data is stored on disk.
+    - **Stateless**: Data is purged upon browser exit.
+    """)
+
     # Header
     st.markdown("""
     <div class="main-header">

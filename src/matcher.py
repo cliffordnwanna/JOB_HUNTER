@@ -94,10 +94,14 @@ class AzureSemanticMatcher(BaseMatcher):
         if not self.client:
             return 0.0
             
-        cv_text = cv_data.get("full_text", "")[:2000]
+        # GDPR COMPLIANCE: We only send skills and anonymized text chunks to Azure.
+        # We NEVER send the full text which contains Name, Email, or Phone.
+        skills_str = ", ".join(cv_data.get("skills", []))
+        cv_text_anonymized = f"Skills: {skills_str}"
+        
         job_text = f"Title: {job.get('title')}\nDescription: {job.get('description')[:2000]}"
         
-        cv_emb = self.get_embedding(cv_text)
+        cv_emb = self.get_embedding(cv_text_anonymized)
         job_emb = self.get_embedding(job_text)
         
         if cv_emb and job_emb:
