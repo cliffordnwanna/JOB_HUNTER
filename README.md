@@ -1,3 +1,4 @@
+---
 title: Job Hunter
 emoji: 🎯
 colorFrom: blue
@@ -48,7 +49,7 @@ Job seekers often spend hours manually searching across multiple platforms, only
 
 ---
 
-## �🌟 Key Technical Highlights
+## �� Key Technical Highlights
 
 - **Hybrid Matching Engine**: Implements a dual-layer scoring system:
   - **Standard**: High-speed TF-IDF and keyword adjacency matching.
