@@ -1,5 +1,11 @@
 import streamlit as st
 import time
+import sys
+import os
+
+# Ensure the 'src' directory is in the Python path for Hugging Face
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from src.parser import EnhancedCVParser
 from src.scraper import JobScraper
 from src.matcher import JobMatcher
