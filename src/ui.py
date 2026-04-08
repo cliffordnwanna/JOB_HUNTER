@@ -66,9 +66,9 @@ def load_css():
 
 def show_loading_screen():
     loading_placeholder = st.empty()
-    loading_placeholder.markdown("""
+    loading_placeholder.markdown(f"""
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; background: linear-gradient(135deg, #0078D4 0%, #004578 100%); border-radius: 20px; margin: 20px;">
-        <div style="color: white; font-size: 2.5em; margin-bottom: 15px; font-weight: bold;">🚀 Job Hunter Pro</div>
+        <div style="color: white; font-size: 2.5em; margin-bottom: 15px; font-weight: bold;">🚀 Job Hunter</div>
         <div style="color: #f0f0f0; font-size: 1.2em;">Initializing Azure AI Backend...</div>
     </div>
     """, unsafe_allow_html=True)

@@ -46,7 +46,7 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1>🚀 Job Hunter Pro</h1>
+        <h1>🚀 Job Hunter</h1>
         <p>AI-Powered Remote Job Matching (Standard + Semantic Matchers)</p>
     </div>
     """, unsafe_allow_html=True)
