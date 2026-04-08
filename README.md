@@ -114,18 +114,6 @@ AZURE_OPENAI_ENDPOINT=your_endpoint
 
 ---
 
-## 🎯 Project Evolution: Data Science to AI Engineering
-
-This project serves as a showcase for my transition from a **Data Scientist at WEMA Bank** to an **Azure AI Developer**. 
-
-**Key engineering decisions made:**
-1. **Decoupling Logic**: Moved business logic out of the UI layer into modular services (`src/`).
-2. **Abstracting Matchers**: Implemented a `BaseMatcher` class to allow easy swapping of matching algorithms (TF-IDF vs Semantic).
-3. **Environment Security**: Implemented standard secret management practices for cloud deployment.
-4. **Asynchronous Patterns**: Integrated progress callbacks to handle long-running scraping tasks without blocking the UI.
-
----
-
 ## 👨‍💻 Author
 
 **Chukwuma Clifford Nwanna**  
