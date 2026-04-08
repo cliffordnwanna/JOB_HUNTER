@@ -1,32 +1,40 @@
-# Python
+# Security & Secrets
+.env
+.env.local
+.streamlit/secrets.toml
+
+# Environment & Dependencies
+venv/
+.venv/
+env/
+bin/
+lib/
+share/
+Include/
+Scripts/
+pyvenv.cfg
+
+# Python Cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv/
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
 *.swp
 *.swo
 
-# Output files
+# Project Specific Data
 *.xlsx
 *.csv
-job_matches_*.xlsx
-cover_letter_*.docx
-application_package_*.docx
-
-# Streamlit
-.streamlit/secrets.toml
-
-# OS
-.DS_Store
-Thumbs.db
+*.docx
+!assets/*.png
+!assets/*.jpg
 
 # Jupyter
 .ipynb_checkpoints/
