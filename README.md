@@ -34,7 +34,7 @@ As an AI Engineer, I prioritize **Responsible AI** and data sovereignty. This pl
 
 ---
 
-## � Project Overview
+## Project Overview
 
 ### 🛑 The Problem
 Job seekers often spend hours manually searching across multiple platforms, only to find jobs that don't truly match their technical skill sets. Traditional keyword-based search fails to capture the **semantic intent** of a candidate's experience, leading to low application success rates and "search fatigue."
@@ -49,7 +49,7 @@ Job seekers often spend hours manually searching across multiple platforms, only
 
 ---
 
-## �� Key Technical Highlights
+## Key Technical Highlights
 
 - **Hybrid Matching Engine**: Implements a dual-layer scoring system:
   - **Standard**: High-speed TF-IDF and keyword adjacency matching.
@@ -128,11 +128,11 @@ This project serves as a showcase for my transition from a **Data Scientist at W
 
 ## 👨‍💻 Author
 
-**Chukwuma Nwanna**  
-*Software developer | Transitioning to AI/ML Engineer*  
+**Chukwuma Clifford Nwanna**  
+*Software developer | AI/ML Engineer*  
 [LinkedIn](https://linkedin.com/in/chukwumanwanna) | [GitHub](https://github.com/cliffordnwanna)
 
 ---
 
 ## 📄 License
-MIT License - 2026 Chukwuma Nwanna
+MIT License - 2026 Chukwuma Clifford Nwanna
