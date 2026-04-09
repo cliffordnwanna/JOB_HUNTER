@@ -3,6 +3,7 @@ LLM-Based CV Extractor - Dynamic Skill Extraction
 Uses Azure OpenAI or local LLM to extract skills, experience, domain from sanitized CV text.
 """
 import os
+import re
 import json
 from typing import List, Dict, Optional, Literal
 from dataclasses import dataclass, field
@@ -68,26 +69,24 @@ class CVExtractionResult:
 
 class LLMCVExtractor:
     """
-    LLM-powered CV extractor using Azure OpenAI with structured outputs.
+    LLM-powered CV extractor using OpenAI with structured outputs.
     PII is already sanitized before reaching this class.
     """
     
-    def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None):
-        self.api_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
-        self.endpoint = endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
-        self.deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-mini")
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         self.client = None
         
-        if self.api_key and self.endpoint:
+        if self.api_key:
             try:
-                from openai import AzureOpenAI
-                self.client = AzureOpenAI(
-                    api_key=self.api_key,
-                    api_version="2024-08-01-preview",  # Required for structured outputs
-                    azure_endpoint=self.endpoint
-                )
+                from openai import OpenAI
+                self.client = OpenAI(api_key=self.api_key)
+                print(f"✅ OpenAI client initialized with model: {self.model}")
             except ImportError:
-                print("Azure OpenAI not available. LLM extraction disabled.")
+                print("⚠️ OpenAI package not available. Install with: pip install openai")
+            except Exception as e:
+                print(f"⚠️ OpenAI init error: {e}")
     
     def _build_extraction_prompt(self, sanitized_text: str) -> str:
         """
@@ -249,7 +248,7 @@ Guidelines:
             prompt = self._build_extraction_prompt(sanitized_text)
             
             response = self.client.chat.completions.create(
-                model=self.deployment,
+                model=self.model,
                 messages=[
                     {
                         "role": "system",
@@ -260,8 +259,9 @@ Guidelines:
                         "content": prompt
                     }
                 ],
-                temperature=0.1,  # Low temperature for consistency
-                max_tokens=2000
+                temperature=0.1,
+                max_tokens=2000,
+                response_format={"type": "json_object"}
             )
             
             response_text = response.choices[0].message.content
