@@ -48,6 +48,25 @@ Unlike traditional parsers with hardcoded skill databases, Job Hunter Pro uses *
 - **Model Caching**: `@st.cache_resource` ensures one-time download, persistent across sessions
 - **Hybrid Scoring**: TF-IDF + BERT + Azure embeddings weighted intelligently
 
+### 🔧 Optional Features (Activate by Uncommenting)
+The following advanced features are **disabled by default** for fast deployment. To activate them:
+
+1. **Open** `requirements.txt`
+2. **Uncomment** the lines for the features you want:
+   ```python
+   # sentence-transformers>=2.2.0  # BERT semantic matching
+   # torch>=2.0.0                   # Required for BERT
+   # openai>=1.0.0                  # Azure OpenAI extraction
+   # langchain-openai>=0.0.5        # LangChain Azure integration
+   ```
+3. **Redeploy** to Render
+
+| Feature | Description | Build Time Impact |
+|---------|-------------|-------------------|
+| **BERT** | Neural semantic matching | +5 min |
+| **Azure OpenAI** | Cloud LLM extraction | +1 min |
+| **spaCy** | Local NER fallback | +2 min |
+
 ---
 
 ## Project Overview
@@ -140,7 +159,7 @@ graph TD
 | **PII Sanitization** | **PII tokenization** + **GDPR Article 17** immediate purge |
 | **Parsing** | pdfplumber, python-docx with **magic bytes detection** |
 | **Scraping** | requests, BeautifulSoup4, **concurrent.futures** parallel with timeout |
-| **Deployment** | Hugging Face Spaces |
+| **Deployment** | Render.com (with optional HF Spaces fallback) |
 
 ---
 
@@ -159,11 +178,11 @@ pip install -r requirements.txt
 
 **Note**: First run downloads ~80MB BERT model (cached for future runs).
 
-**HuggingFace Free Tier**: 
-- Cold start: 20-30s on first load (2 vCPU, no GPU)
-- Default TF-IDF mode recommended for speed
-- BERT mode available but slower on CPU
-- For best performance, run locally or upgrade to HuggingFace Pro
+**Render Free Tier**: 
+- Fast cold start: ~5s (no heavy ML models by default)
+- Default TF-IDF mode: instant job matching
+- Optional BERT/Azure features can be enabled in `requirements.txt`
+- 512MB RAM, sleeps after 15 min idle (use UptimeRobot to keep awake)
 
 ### 3. Running Locally
 ```bash

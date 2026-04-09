@@ -28,9 +28,8 @@ st.set_page_config(
 load_css()
 
 def main():
-    # Realistic cold start warning for HuggingFace Free Tier
+    # Cold start tracking (for analytics)
     if "first_load" not in st.session_state:
-        st.info("⏱️ **First load may take 20-30 seconds** on HuggingFace Free Tier while AI models initialize. Subsequent loads will be faster.")
         st.session_state.first_load = True
     
     # Session state guard for model warmup (prevents rerun crashes)
@@ -159,7 +158,7 @@ def main():
             limit = st.slider("Max results per source", 10, 100, 50)
         with f_col2:
             location_filter = st.selectbox("Preferred Location", ["All Remote", "USA", "Europe", "UK", "Worldwide"])
-            min_score = st.slider("Minimum Match Score %", 0, 100, 30)
+            min_score = st.slider("Minimum Match Score %", 10, 100, 30)
 
     if st.button("Find Matching Jobs", type="primary", use_container_width=True):
         if not uploaded_file:
