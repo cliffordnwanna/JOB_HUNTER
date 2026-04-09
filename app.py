@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import time
 import sys
 import os
@@ -67,13 +68,13 @@ def main():
         if uploaded_file:
             parser = EnhancedCVParser()
             with st.spinner("Parsing CV..."):
-                cv_data = parser.parse(uploaded_file.name, uploaded_file.read())
+                st.session_state.cv_data = parser.parse(uploaded_file.name, uploaded_file.read())
                 st.success("✅ CV Parsed successfully!")
                 
                 with st.expander("Extracted Skills"):
-                    st.write(", ".join(cv_data.get('skills', [])))
+                    st.write(", ".join(st.session_state.cv_data.get('skills', [])))
                 
-                st.info(f"Experience Found: {cv_data.get('years_experience', 0)} years")
+                st.info(f"Experience Found: {st.session_state.cv_data.get('years_experience', 0)} years")
 
     with col2:
         st.subheader("🎯 Job Matching")
@@ -96,6 +97,11 @@ def main():
                 return
 
             # Initialize components
+            cv_data = st.session_state.get('cv_data')
+            if not cv_data:
+                st.error("CV data not found. Please re-upload your CV.")
+                return
+                
             scraper = JobScraper()
             matcher = JobMatcher(cv_data, use_azure=use_azure)
             
@@ -108,7 +114,7 @@ def main():
                 status_text.text(text)
 
             jobs = scraper.scrape_all(
-                keywords=[search_keywords] if search_keywords else cv_data.get('skills', []),
+                keywords=[search_keywords] if search_keywords else st.session_state.cv_data.get('skills', []),
                 limit=limit,
                 progress_callback=update_progress
             )
