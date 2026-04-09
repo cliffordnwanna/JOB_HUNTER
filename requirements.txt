@@ -12,10 +12,13 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 lxml>=4.9.0
 
+# SKILL EXTRACTION (Required for CV parsing)
+spacy>=3.7.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
 # OPTIONAL - Uncomment for enhanced features (slower build):
 # sentence-transformers>=2.2.0  # BERT semantic matching
 # torch>=2.0.0                   # Required for BERT
-# spacy>=3.7.0                   # Local NER fallback
 # openai>=1.0.0                  # Azure OpenAI extraction
 # langchain-openai>=0.0.5        # LangChain Azure integration
 # langchain-core>=0.2.0,<0.3.0  # LangChain core

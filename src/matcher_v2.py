@@ -80,14 +80,18 @@ class DynamicTFIDFMatcher(BaseMatcher):
         if title:
             parts.extend([title] * 3)
         
-        # Tags
+        # Tags (ensure all are strings)
         if isinstance(tags, list):
-            parts.extend(tags)
+            parts.extend([str(tag) for tag in tags])
+        elif tags:
+            parts.append(str(tags))
         
         # Description
         if description:
-            parts.append(description)
+            parts.append(str(description))
         
+        # Ensure ALL parts are strings before join
+        parts = [str(p) if p is not None else '' for p in parts]
         return " ".join(parts).lower()
     
     def match(self, cv_data: Dict, job: Dict) -> float:
