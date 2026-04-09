@@ -1,0 +1,10 @@
+# System dependencies for Hugging Face Spaces build
+# Models pre-downloaded by setup.sh:
+# - BERT (sentence-transformers)
+# - spaCy en_core_web_sm
+
+# Python packages for HF build environment
+spacy>=3.7.0
+
+# Note: For optimal performance on free tier, default to TF-IDF mode
+# BERT mode available for users who want semantic matching (slower on CPU)

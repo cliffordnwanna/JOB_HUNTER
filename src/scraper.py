@@ -13,7 +13,9 @@ class JobScraper:
     def scrape_remoteok(self, limit=50):
         """Scrape RemoteOK - one of the largest remote job boards."""
         try:
-            data = requests.get("https://remoteok.com/api", timeout=15, headers=self.headers).json()
+            response = requests.get("https://remoteok.com/api", timeout=10, headers=self.headers)
+            response.raise_for_status()
+            data = response.json()
             jobs = []
             for item in data[1:limit+1]:
                 if isinstance(item, dict):
@@ -35,7 +37,8 @@ class JobScraper:
     def scrape_remotive(self, limit=50):
         """Scrape Remotive - curated remote jobs in tech."""
         try:
-            response = requests.get("https://remotive.com/api/remote-jobs", timeout=15, headers=self.headers)
+            response = requests.get("https://remotive.com/api/remote-jobs", timeout=10, headers=self.headers)
+            response.raise_for_status()
             data = response.json()
             jobs = []
             for item in data.get('jobs', [])[:limit]:
@@ -57,7 +60,8 @@ class JobScraper:
     def scrape_jobicy(self, limit=50):
         """Scrape Jobicy - remote jobs worldwide."""
         try:
-            response = requests.get("https://jobicy.com/api/v2/remote-jobs?count=50", timeout=15, headers=self.headers)
+            response = requests.get("https://jobicy.com/api/v2/remote-jobs?count=50", timeout=10, headers=self.headers)
+            response.raise_for_status()
             data = response.json()
             jobs = []
             for item in data.get('jobs', [])[:limit]:
@@ -79,7 +83,8 @@ class JobScraper:
     def scrape_arbeitnow(self, limit=50):
         """Scrape Arbeitnow - EU remote jobs."""
         try:
-            response = requests.get("https://www.arbeitnow.com/api/job-board-api", timeout=15, headers=self.headers)
+            response = requests.get("https://www.arbeitnow.com/api/job-board-api", timeout=10, headers=self.headers)
+            response.raise_for_status()
             data = response.json()
             jobs = []
             for item in data.get('data', []):
@@ -104,7 +109,8 @@ class JobScraper:
     def scrape_himalayas(self, limit=50):
         """Scrape Himalayas - remote-first company jobs."""
         try:
-            response = requests.get("https://himalayas.app/jobs/api?limit=50", timeout=15, headers=self.headers)
+            response = requests.get("https://himalayas.app/jobs/api?limit=50", timeout=10, headers=self.headers)
+            response.raise_for_status()
             data = response.json()
             jobs = []
             for item in data.get('jobs', [])[:limit]:
@@ -129,10 +135,9 @@ class JobScraper:
 
     def scrape_weworkremotely(self, limit=50):
         try:
-            soup = BeautifulSoup(
-                requests.get("https://weworkremotely.com/remote-jobs", timeout=15, headers=self.headers).text,
-                "html.parser"
-            )
+            response = requests.get("https://weworkremotely.com/remote-jobs", timeout=10, headers=self.headers)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
             jobs = []
             for li in soup.select("li.feature")[:limit]:
                 a = li.find("a", href=True)
@@ -153,9 +158,17 @@ class JobScraper:
         except Exception:
             return []
 
-    def scrape_all(self, keywords: List[str] = None, limit: int = 50, progress_callback=None):
-        """Scrape jobs from sources with specific limit."""
-        all_jobs = []
+    def scrape_all(self, keywords: List[str] = None, limit: int = 50, progress_callback=None, timeout: int = 10):
+        """
+        Scrape jobs from all sources in parallel with timeout per source.
+        
+        Args:
+            keywords: Filter keywords
+            limit: Max jobs per source
+            progress_callback: Function(pct, message) for progress updates
+            timeout: Max seconds per source (default 10s)
+        """
+        import concurrent.futures
         
         scrapers = [
             (self.scrape_remoteok, "RemoteOK"),
@@ -166,11 +179,33 @@ class JobScraper:
             (self.scrape_weworkremotely, "WeWorkRemotely")
         ]
 
+        all_jobs = []
         total_scrapers = len(scrapers)
-        for i, (scraper_func, name) in enumerate(scrapers):
-            if progress_callback:
-                progress_callback((i + 1) / total_scrapers, f"🔍 Searching {name}...")
-            all_jobs.extend(scraper_func(limit=limit))
+        completed = 0
+        
+        # Use ThreadPoolExecutor for parallel scraping with timeout
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            # Submit all scraping tasks
+            future_to_scraper = {
+                executor.submit(scraper_func, limit): name 
+                for scraper_func, name in scrapers
+            }
+            
+            # Collect results as they complete (with timeout)
+            for future in concurrent.futures.as_completed(future_to_scraper):
+                name = future_to_scraper[future]
+                completed += 1
+                
+                try:
+                    jobs = future.result(timeout=timeout)
+                    all_jobs.extend(jobs)
+                except concurrent.futures.TimeoutError:
+                    print(f"⏱️ Timeout: {name} took longer than {timeout}s, skipping")
+                except Exception as e:
+                    print(f"❌ Error scraping {name}: {e}")
+                
+                if progress_callback:
+                    progress_callback(completed / total_scrapers, f"🔍 Searched {name}...")
 
         # Filter by keyword
         if keywords:
@@ -182,14 +217,30 @@ class JobScraper:
                     filtered.append(job)
             all_jobs = filtered
 
-        # Remove duplicates
+        # Remove duplicates (by URL and fuzzy title+company match)
         seen_urls = set()
+        seen_signatures = set()
         unique_jobs = []
+        
         for job in all_jobs:
             url = job.get('url', '')
-            if url and url not in seen_urls:
+            title = job.get('title', '').lower().strip()
+            company = job.get('company', '').lower().strip()
+            
+            # Skip if exact URL already seen
+            if url and url in seen_urls:
+                continue
+            
+            # Create fuzzy signature (first 20 chars of title + company)
+            # This catches same job with slightly different titles
+            signature = f"{title[:20]}|{company[:15]}"
+            if signature in seen_signatures:
+                continue
+            
+            if url:
                 seen_urls.add(url)
-                unique_jobs.append(job)
+            seen_signatures.add(signature)
+            unique_jobs.append(job)
 
         self.jobs = unique_jobs
         return unique_jobs
