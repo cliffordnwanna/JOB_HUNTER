@@ -11,7 +11,7 @@ pinned: false
 
 # 🚀 Job Hunter Pro: Dynamic AI Job Matching Platform
 
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/cliffordnwanna/job-hunter)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen)](https://job-hunter-pro.onrender.com)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://remotejobhunter.streamlit.app)
 
 **Job Hunter Pro** is a production-grade AI platform featuring **LLM-powered structured extraction**, **PII tokenization**, and **graceful degradation chain** (Azure → BERT → TF-IDF → spaCy). Built with privacy-first architecture — no hardcoded skill databases, explicit job title extraction, and GDPR Article 17 compliant immediate PII purge.
@@ -19,7 +19,7 @@ pinned: false
 ---
 
 ## 🌐 Live Project
-**🚀 [Try Job Hunter on Hugging Face Spaces](https://huggingface.co/spaces/cliffordnwanna/job-hunter)**
+**🚀 [Try Job Hunter Pro Live](https://job-hunter-pro.onrender.com)**
 
 ---
 
