@@ -303,40 +303,62 @@ class HybridExtractor:
     
     def _local_fallback(self, raw_text: str) -> CVExtractionResult:
         """
-        Fallback extraction using local NLP if LLM unavailable.
-        Uses spacy for NER and simple keyword extraction.
+        Fallback extraction using regex patterns (no spaCy required).
+        Extracts skills, experience, and education from raw text.
         """
         result = CVExtractionResult(
-            extraction_method="local_fallback",
-            extraction_confidence=0.3  # Lower confidence for local
+            extraction_method="regex_fallback",
+            extraction_confidence=0.3  # Lower confidence for regex
         )
         
         try:
-            import spacy
-            try:
-                nlp = spacy.load("en_core_web_sm")
-            except (ImportError, OSError):
-                return result  # spaCy model not available, return empty result
-            doc = nlp(raw_text.lower())
+            text = raw_text.lower()
             
-            # Extract noun phrases as potential skills
-            noun_chunks = [chunk.text for chunk in doc.noun_chunks 
-                          if len(chunk.text) > 3 and len(chunk.text) < 30]
+            # Common skill keywords (domain-agnostic)
+            skill_patterns = [
+                # Technical skills
+                r'\b(python|java|javascript|sql|aws|azure|docker|kubernetes|git|api|rest|cloud)\b',
+                # Healthcare
+                r'\b(patient care|clinical|medical|therapy|treatment|rehabilitation|diagnosis)\b',
+                # Business/Finance
+                r'\b(analysis|reporting|budget|forecast|strategy|project management|agile|scrum)\b',
+                # Soft skills
+                r'\b(leadership|communication|teamwork|problem.solving|critical thinking)\b',
+                # Generic professional
+                r'\b(research|documentation|training|compliance|quality|operations|customer service)\b',
+            ]
             
-            # Deduplicate and create skills
             seen = set()
-            for chunk in noun_chunks[:50]:  # Limit
-                clean = chunk.strip()
-                if clean not in seen and not any(pii in clean for pii in ['@', 'http', 'phone', 'email']):
-                    seen.add(clean)
-                    skill = ExtractedSkill(
-                        name=clean,
-                        category="domain_knowledge",
-                        context="extracted from noun phrase"
-                    )
-                    result.domain_knowledge.append(skill)
+            for pattern in skill_patterns:
+                matches = re.findall(pattern, text)
+                for match in matches:
+                    clean = match.strip().replace('.', ' ').title()
+                    if clean and clean not in seen and len(clean) > 2:
+                        seen.add(clean)
+                        skill = ExtractedSkill(
+                            name=clean,
+                            category="extracted",
+                            context="regex pattern match"
+                        )
+                        result.domain_knowledge.append(skill)
             
-            result.raw_skills_text = ", ".join(seen)
+            # Extract 2-3 word noun phrases as potential skills
+            words = re.findall(r'\b[a-z]{3,}\s+[a-z]{3,}(?:\s+[a-z]{3,})?\b', text)
+            for phrase in words[:30]:
+                clean = phrase.title()
+                if clean not in seen and len(clean) < 40:
+                    # Filter out common noise words
+                    noise = ['the', 'and', 'for', 'with', 'from', 'this', 'that', 'have', 'been']
+                    if not any(word in phrase for word in noise):
+                        seen.add(clean)
+                        skill = ExtractedSkill(
+                            name=clean,
+                            category="domain_knowledge",
+                            context="extracted from text"
+                        )
+                        result.domain_knowledge.append(skill)
+            
+            result.raw_skills_text = ", ".join(list(seen)[:20])  # Limit to 20
             
             # Detect years of experience
             years_pattern = re.compile(r'(\d+)\+?\s*years?\s+(?:of\s+)?experience')
@@ -344,7 +366,17 @@ class HybridExtractor:
             if matches:
                 result.total_years_experience = max(int(m) for m in matches)
             
+            # Detect education
+            edu_patterns = [
+                r'(bachelor|master|phd|doctorate|degree|certification|diploma)',
+                r'(university|college|institute|school of)'
+            ]
+            for pattern in edu_patterns:
+                if re.search(pattern, text):
+                    result.highest_education = "Degree/Certification detected"
+                    break
+                    
         except Exception as e:
-            print(f"Local extraction failed: {e}")
+            print(f"Regex fallback extraction failed: {e}")
         
         return result

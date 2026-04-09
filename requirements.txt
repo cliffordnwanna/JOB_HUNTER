@@ -1,5 +1,5 @@
-# CORE DEPENDENCIES - Fast deployment, TF-IDF only mode
-# Optional features (BERT, Azure, spaCy) load dynamically if available
+# CORE DEPENDENCIES - Fast deployment, TF-IDF matching
+# Optional features (BERT, Azure) load dynamically if available
 
 streamlit>=1.32
 pandas>=2.0.0
@@ -11,10 +11,6 @@ numpy>=1.21.0
 requests>=2.31.0
 python-dotenv>=1.0.0
 lxml>=4.9.0
-
-# SKILL EXTRACTION (Required for CV parsing)
-spacy>=3.7.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
 
 # OPTIONAL - Uncomment for enhanced features (slower build):
 # sentence-transformers>=2.2.0  # BERT semantic matching
