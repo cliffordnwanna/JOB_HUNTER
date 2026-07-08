@@ -3,7 +3,7 @@ PII Sanitizer Module - GDPR Compliant
 Removes personally identifiable information before LLM processing.
 """
 import re
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 from dataclasses import dataclass
 
 

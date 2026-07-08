@@ -1,10 +1,21 @@
+import sys
+import os
+import io
+
+# Force UTF-8 stdout/stderr so emoji in print() statements can't crash the
+# app on Windows consoles that default to cp1252.
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
 import streamlit as st
 import pandas as pd
 import time
-import sys
-import os
 import re
 import html
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Ensure the 'src' directory is in the Python path for Hugging Face
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -79,14 +90,14 @@ def main():
     elif match_mode == "hybrid":
         st.sidebar.info("Hybrid: TF-IDF + BERT (+ Azure if configured).")
     elif match_mode == "tfidf":
-        st.sidebar.info("TF-IDF: Fast keyword matching, no ML models.")
+        st.sidebar.info("TF-IDF: Fast keyword-based job matching. (CV parsing still uses AI.)")
 
     # Governance Section (Sidebar)
     st.sidebar.markdown("---")
     st.sidebar.subheader("⚖️ AI Governance")
     st.sidebar.info("""
     **Privacy & Compliance:**
-    - **GDPR Compliant**: No PII is sent to Azure OpenAI.
+    - **GDPR Compliant**: PII is sanitized before any AI provider sees your CV.
     - **In-Memory**: No CV data is stored on disk.
     - **Stateless**: Data is purged upon browser exit.
     """)
@@ -94,8 +105,8 @@ def main():
     # Header
     st.markdown("""
     <div class="main-header">
-        <h1>🚀 Job Hunter</h1>
-        <p>AI-Powered Remote Job Matching (Standard + Semantic Matchers)</p>
+        <h1>Job Hunter</h1>
+        <p>AI-powered job discovery and intelligent career matching.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -128,16 +139,27 @@ def main():
             st.info("ℹ️ Using local extraction mode. Results may be less precise.")
         
         if skills:
-            st.success(f"✅ CV Parsed! Found **{len(skills)} skills** and **{years_exp} years** experience")
+            if years_exp:
+                st.success(f"✅ CV Parsed! Found **{len(skills)} skills** and **{years_exp} years** experience")
+            else:
+                st.success(f"✅ CV Parsed! Found **{len(skills)} skills**")
             with st.expander("📋 View Extracted Profile", expanded=True):
                 # Show professional title if available
                 if professional_title:
                     st.markdown(f"**👤 Professional Title:** {professional_title}")
-                
-                # Show skills
-                skill_text = ", ".join(skills[:30])  # Limit display
-                st.markdown(f"**🛠️ Skills:** {skill_text}")
-                
+
+                # Show skills grouped by category for easier scanning
+                skill_categories = cv_data.get('skill_categories', {})
+                grouped = {}
+                for skill in skills[:30]:
+                    category = skill_categories.get(skill, "Other")
+                    grouped.setdefault(category, []).append(skill)
+
+                category_order = ["Technical", "Tools", "Domain", "Soft Skills", "Other"]
+                for category in category_order:
+                    if category in grouped:
+                        st.markdown(f"**🛠️ {category}:** {', '.join(grouped[category])}")
+
                 # Show extraction confidence
                 confidence = cv_data.get('extraction_confidence', 0)
                 if confidence:
@@ -158,7 +180,12 @@ def main():
             limit = st.slider("Max results per source", 10, 100, 50)
         with f_col2:
             location_filter = st.selectbox("Preferred Location", ["All Remote", "USA", "Europe", "UK", "Worldwide"])
-            min_score = st.slider("Minimum Match Score %", 10, 100, 30)
+            match_quality = st.selectbox(
+                "Match Quality",
+                ["All Results", "Good matches and above", "Strong matches only"],
+                help="Filter out lower-relevance results"
+            )
+            min_score = {"All Results": 0, "Good matches and above": 40, "Strong matches only": 70}[match_quality]
 
     if st.button("Find Matching Jobs", type="primary", use_container_width=True):
         if not uploaded_file:
@@ -231,10 +258,7 @@ def main():
         
         # Suggest lowering threshold if everything filtered out
         if not filtered_by_score and scored_jobs:
-            max_available = max(j.get('Match Score', 0) for j in scored_jobs)
-            st.warning(f"⚠️ No jobs matched above {min_score}% score. "
-                      f"Maximum available score is {max_available:.0f}%. "
-                      f"Try lowering the minimum score threshold.")
+            st.warning(f"⚠️ No jobs matched \"{match_quality}\". Showing the closest results instead.")
             # Show unfiltered results instead
             filtered_by_score = scored_jobs[:10]  # Show top 10 anyway
         

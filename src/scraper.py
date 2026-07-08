@@ -200,9 +200,9 @@ class JobScraper:
                     jobs = future.result(timeout=timeout)
                     all_jobs.extend(jobs)
                 except concurrent.futures.TimeoutError:
-                    print(f"⏱️ Timeout: {name} took longer than {timeout}s, skipping")
+                    print(f"Timeout: {name} took longer than {timeout}s, skipping")
                 except Exception as e:
-                    print(f"❌ Error scraping {name}: {e}")
+                    print(f"Error scraping {name}: {e}")
                 
                 if progress_callback:
                     progress_callback(completed / total_scrapers, f"🔍 Searched {name}...")

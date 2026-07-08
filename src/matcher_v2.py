@@ -29,7 +29,6 @@ class DynamicTFIDFMatcher(BaseMatcher):
             max_features=5000,  # Increased for better coverage
             ngram_range=(1, 3),  # Include trigrams for phrases
             min_df=1,  # Allow rare terms
-            max_df=0.95  # Ignore overly common terms
         )
     
     def _build_cv_text(self, cv_data: Dict) -> str:
@@ -108,7 +107,13 @@ class DynamicTFIDFMatcher(BaseMatcher):
         # Check for very short CV (sparse corpus issue)
         skills = cv_data.get('skills', [])
         is_short_cv = len(skills) < 3 and len(cv_text) < 500
-        
+
+        # Soft skills (leadership, communication, etc.) are near-universal across
+        # job postings and dilute the explicit-match signal without indicating
+        # role fit, so the boost only considers technical/domain/tool skills.
+        soft_skills_lower = {s.lower() for s in cv_data.get('soft_skills', [])}
+        rankable_skills = [s for s in skills if s.lower() not in soft_skills_lower] or skills
+
         try:
             if is_short_cv:
                 # Fallback: Simple keyword matching for short CVs
@@ -123,14 +128,42 @@ class DynamicTFIDFMatcher(BaseMatcher):
             # Convert to percentage
             score = float(similarity) * 100
             
-            # Boost score based on explicit skill matches
+            # Boost score based on explicit skill matches.
+            # Skills may be multi-word phrases (e.g. "Machine learning & predictive
+            # modelling", "Data engineering (Python, SQL)") that rarely appear
+            # verbatim in a job posting. A skill counts as matched if the phrase
+            # appears verbatim, OR a concrete term inside parentheses matches
+            # (those are the specific, low-ambiguity part of the phrase), OR a
+            # majority of the phrase's significant words match (a single generic
+            # word like "data" or "systems" is too common to count alone).
             job_text_lower = job_text
-            
-            explicit_matches = sum(1 for skill in skills if skill.lower() in job_text_lower)
-            if len(skills) > 0:
-                match_ratio = explicit_matches / len(skills)
-                # Blend TF-IDF with explicit match ratio
-                score = (score * 0.7) + (match_ratio * 100 * 0.3)
+            stopwords = {"and", "for", "the", "with", "using"}
+
+            def skill_matches_job(skill: str) -> bool:
+                skill_lower = skill.lower()
+                if skill_lower in job_text_lower:
+                    return True
+
+                parenthetical_terms = re.findall(r"\(([^)]*)\)", skill_lower)
+                for group in parenthetical_terms:
+                    terms = [t.strip() for t in re.split(r"[,/]", group) if t.strip()]
+                    if any(term in job_text_lower for term in terms if len(term) > 2):
+                        return True
+
+                outside_parens = re.sub(r"\([^)]*\)", "", skill_lower)
+                words = re.findall(r"[a-z0-9+.#]+", outside_parens)
+                significant = [w for w in words if len(w) > 2 and w not in stopwords]
+                if not significant:
+                    return False
+                hits = sum(1 for w in significant if w in job_text_lower)
+                return hits / len(significant) >= 0.6
+
+            explicit_matches = sum(1 for skill in rankable_skills if skill_matches_job(skill))
+            if len(rankable_skills) > 0:
+                match_ratio = explicit_matches / len(rankable_skills)
+                # Explicit skill overlap is the more reliable signal on short texts;
+                # TF-IDF cosine similarity is noisy with only 2 documents in the corpus.
+                score = (score * 0.3) + (match_ratio * 100 * 0.7)
             
             return round(min(score, 100), 2)
             
@@ -188,9 +221,9 @@ class BertSemanticMatcher(BaseMatcher):
             try:
                 from sentence_transformers import SentenceTransformer
                 self.model = SentenceTransformer(self.model_name)
-                print(f"✅ BERT model loaded (direct): {self.model_name}")
+                print(f"BERT model loaded (direct): {self.model_name}")
             except Exception as e2:
-                print(f"⚠️ BERT unavailable: {e2}")
+                print(f"BERT unavailable: {e2}")
     
     def _build_profile_text(self, cv_data: Dict) -> str:
         """Build professional profile description."""
@@ -370,13 +403,29 @@ class DynamicJobMatcher:
             # Calculate weighted final score
             final_score = self._calculate_final_score(scores)
             
-            job["Match Score"] = round(final_score, 2)
+            job["_raw_score"] = round(final_score, 2)
             job["_match_details"] = scores
             job["_match_mode"] = self.active_mode
             scored_jobs.append(job)
-        
-        # Sort by score (descending)
-        scored_jobs.sort(key=lambda x: x.get("Match Score", 0), reverse=True)
+
+        # Sort by raw score (descending)
+        scored_jobs.sort(key=lambda x: x.get("_raw_score", 0), reverse=True)
+
+        # Rescale for display: raw TF-IDF/cosine scores cluster in a low range
+        # (e.g. 5-20%) that reads as "bad match" to users even when the ranking
+        # is correct, since tools like LinkedIn show relative fit, not raw
+        # similarity. Stretch this batch's scores so the best match anchors near
+        # 90% and weaker matches fall off proportionally, preserving rank order
+        # and relative gaps without fabricating precision the model doesn't have.
+        if scored_jobs:
+            top_raw = scored_jobs[0]["_raw_score"]
+            for job in scored_jobs:
+                if top_raw > 0:
+                    display_score = (job["_raw_score"] / top_raw) * 90
+                else:
+                    display_score = 0.0
+                job["Match Score"] = round(display_score, 1)
+
         return scored_jobs
     
     def _calculate_final_score(self, scores: Dict[str, float]) -> float:

@@ -30,14 +30,14 @@ class ModelManager:
         """
         try:
             from sentence_transformers import SentenceTransformer
-            print(f"🔄 Loading BERT model: {model_name}")
+            print(f"Loading BERT model: {model_name}")
             model = SentenceTransformer(model_name)
-            print(f"✅ BERT model loaded successfully")
+            print(f"BERT model loaded successfully")
             return model
         except Exception as e:
-            print(f"❌ Failed to load BERT model: {e}")
+            print(f"Failed to load BERT model: {e}")
             return None
-    
+
     @staticmethod
     @st.cache_resource(show_spinner=False)
     def _load_spacy_model(model_name: str = "en_core_web_sm"):
@@ -46,12 +46,12 @@ class ModelManager:
         """
         try:
             import spacy
-            print(f"🔄 Loading spaCy model: {model_name}")
+            print(f"Loading spaCy model: {model_name}")
             nlp = spacy.load(model_name)
-            print(f"✅ spaCy model loaded successfully")
+            print(f"spaCy model loaded successfully")
             return nlp
         except Exception as e:
-            print(f"❌ Failed to load spaCy model: {e}")
+            print(f"Failed to load spaCy model: {e}")
             return None
     
     def get_bert_model(self, model_name: str = "all-MiniLM-L6-v2") -> Optional[Any]:

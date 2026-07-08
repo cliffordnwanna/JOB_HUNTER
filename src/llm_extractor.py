@@ -82,11 +82,11 @@ class LLMCVExtractor:
             try:
                 from openai import OpenAI
                 self.client = OpenAI(api_key=self.api_key)
-                print(f"✅ OpenAI client initialized with model: {self.model}")
+                print(f"OpenAI client initialized with model: {self.model}")
             except ImportError:
-                print("⚠️ OpenAI package not available. Install with: pip install openai")
+                print("OpenAI package not available. Install with: pip install openai")
             except Exception as e:
-                print(f"⚠️ OpenAI init error: {e}")
+                print(f"OpenAI init error: {e}")
     
     def _build_extraction_prompt(self, sanitized_text: str) -> str:
         """
@@ -316,8 +316,14 @@ class HybridExtractor:
             
             # Common skill keywords (domain-agnostic)
             skill_patterns = [
-                # Technical skills
-                r'\b(python|java|javascript|sql|aws|azure|docker|kubernetes|git|api|rest|cloud)\b',
+                # Programming languages & core tech
+                r'\b(python|java|javascript|typescript|c\+\+|c#|sql|r|go|rust|php|ruby|swift|kotlin)\b',
+                # Cloud/DevOps/tools
+                r'\b(aws|azure|gcp|docker|kubernetes|git|github|gitlab|ci/cd|rest api|graphql|linux|terraform)\b',
+                # Data/AI/ML
+                r'\b(machine learning|deep learning|nlp|llm|rag|langchain|pandas|numpy|tensorflow|pytorch|data science|vector search|embeddings)\b',
+                # Frameworks
+                r'\b(react|angular|vue|django|flask|fastapi|spring|node\.?js|\.net)\b',
                 # Healthcare
                 r'\b(patient care|clinical|medical|therapy|treatment|rehabilitation|diagnosis)\b',
                 # Business/Finance
@@ -341,23 +347,7 @@ class HybridExtractor:
                             context="regex pattern match"
                         )
                         result.domain_knowledge.append(skill)
-            
-            # Extract 2-3 word noun phrases as potential skills
-            words = re.findall(r'\b[a-z]{3,}\s+[a-z]{3,}(?:\s+[a-z]{3,})?\b', text)
-            for phrase in words[:30]:
-                clean = phrase.title()
-                if clean not in seen and len(clean) < 40:
-                    # Filter out common noise words
-                    noise = ['the', 'and', 'for', 'with', 'from', 'this', 'that', 'have', 'been']
-                    if not any(word in phrase for word in noise):
-                        seen.add(clean)
-                        skill = ExtractedSkill(
-                            name=clean,
-                            category="domain_knowledge",
-                            context="extracted from text"
-                        )
-                        result.domain_knowledge.append(skill)
-            
+
             result.raw_skills_text = ", ".join(list(seen)[:20])  # Limit to 20
             
             # Detect years of experience

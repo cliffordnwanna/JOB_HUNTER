@@ -100,7 +100,7 @@ def show_loading_screen():
     loading_placeholder.markdown(f"""
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; background: linear-gradient(135deg, #0078D4 0%, #004578 100%); border-radius: 20px; margin: 20px;">
         <div style="color: white; font-size: 2.5em; margin-bottom: 15px; font-weight: bold;">🚀 Job Hunter</div>
-        <div style="color: #f0f0f0; font-size: 1.2em;">Initializing Azure AI Backend...</div>
+        <div style="color: #f0f0f0; font-size: 1.2em;">Initializing AI backend...</div>
     </div>
     """, unsafe_allow_html=True)
     return loading_placeholder
@@ -108,9 +108,15 @@ def show_loading_screen():
 def display_job_card(job: dict):
     score = job.get('Match Score', 0)
     score_color = "#10b981" if score > 75 else "#f59e0b" if score > 50 else "#64748b"
+
     tags = job.get('tags', [])[:3]
+    tags = [str(t) for t in tags if t]
     tag_html = "".join([f'<span class="tag">{t}</span>' for t in tags])
-    
+
+    salary = job.get('salary', 'Not specified')
+    if not salary or str(salary).strip() in ('0', ''):
+        salary = 'Not disclosed'
+
     with st.container():
         st.markdown(f"""
         <div class="job-card">
@@ -118,8 +124,8 @@ def display_job_card(job: dict):
                 <div style="flex: 1;">
                     <div class="job-title">{job.get('title', 'N/A')}</div>
                     <div class="job-meta">🏢 <b>{job.get('company', 'N/A')}</b></div>
-                    <div class="job-meta">📍 {job.get('location', 'Remote')} | 💰 {job.get('salary', 'Not specified')}</div>
-                    <div class="job-meta">� {job.get('posted_date', 'N/A')} | � {job.get('source', 'API')}</div>
+                    <div class="job-meta">📍 {job.get('location', 'Remote')} | 💰 {salary}</div>
+                    <div class="job-meta">📅 {job.get('posted_date', 'N/A')} | 🌐 {job.get('source', 'API')}</div>
                     <div style="margin-top: 8px;">{tag_html}</div>
                     <a href="{job.get('url', '#')}" target="_blank" class="apply-btn">View Opportunity</a>
                 </div>
