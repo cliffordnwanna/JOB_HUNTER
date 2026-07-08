@@ -15,11 +15,10 @@ pinned: true
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.32-red.svg)](https://streamlit.io/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991.svg)](https://openai.com/)
 [![Scikit-learn](https://img.shields.io/badge/Scikit--learn-TF--IDF-F7931E.svg)](https://scikit-learn.org/)
-[![Sentence Transformers](https://img.shields.io/badge/Sentence--Transformers-optional-yellow.svg)](https://www.sbert.net/)
 [![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup-Web%20Scraping-43B02A.svg)](https://www.crummy.com/software/BeautifulSoup/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 
-> AI-powered job discovery and intelligent career matching.
+*AI-powered job discovery and intelligent career matching.*
 
 Job Hunter is an AI-powered job matching platform designed to help professionals discover better career opportunities by understanding both candidates and job descriptions.
 
