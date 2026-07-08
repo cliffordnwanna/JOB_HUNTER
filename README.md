@@ -29,6 +29,8 @@ The platform extracts a candidate's professional profile from their CV, aggregat
 
 **Live Demo:** https://huggingface.co/spaces/cliffordnwanna/job-hunter
 
+![Job Hunter demo: uploading a CV and receiving ranked job matches](assets/demo.gif)
+
 ---
 
 ## Why I Built Job Hunter
